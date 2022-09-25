@@ -16,11 +16,11 @@ def start():
         url = input("Enter URL: ")
         if cell_hack(url) == False:
             print("Method unsuccessful")
-            input = input("Try  Mac-spoofing (y/n)\n")
+            user_in = input("Try  Mac-spoofing (y/n)\n")
     else:
         print("Mac spoofing")
         # call bash script mac_spoof.sh
-        os.system("./mac_spoof.sh")
+        # os.system("./mac_spoof.sh")
 
 
 def cell_hack(url):
