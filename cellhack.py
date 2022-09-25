@@ -42,7 +42,8 @@ def start():
                 address = input("Enter Mac address: \n")
                 print("spoofing:")
                 os.system("sudo spoof set " + address + "en0")
-                os.system("sudo spoof list --wifi")
+                print("done")
+
         else:
             os.system("chmod +x mac_spoof.sh")
             os.system("sudo ./mac_spoof.sh")
