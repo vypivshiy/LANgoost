@@ -44,7 +44,7 @@ def start():
                 os.system("sudo spoof list --wifi")
         else:
             os.system("chmod +x mac-spoof.sh")
-            os.system("./mac-spoof.sh")
+            os.system("./mac_spoof.sh")
 
 
 def cell_hack(url):
