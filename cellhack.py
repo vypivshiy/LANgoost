@@ -5,6 +5,7 @@ from get_hosts import scrape_hosts
 import subprocess
 
 additional_hosts = ["Origin"]
+# npm install spoof -g
 
 
 def start():
@@ -20,30 +21,37 @@ def start():
             print("Method unsuccessful")
             user_in = input("Try  Mac-spoofing (y/n)\n")
     else:
-        print("########################\nMac spoofing")
-        user_in = input(
-            "select method:  \n 1. Spoof Mac Adress \n 2. Scan for mac adresses in your network \n")
-        if user_in != "1" and user_in != "2":
-            print("Invalid input")
-            start()
-        if user_in == "1":
-            adress = input("Enter Mac Adress: \n")
-            os.system("spoof set " + adress + "en0 >/dev/null 2>&1")
-            os.system("spoof list --wifi")
+        if input("Are you using Linux? (y/n)\n") == "n":
+            print("########################\nMac spoofing")
+            user_in = input(
+                "select method:  \n 1. Spoof Mac address \n 2. Scan for mac addresses in your network \n")
+            if user_in != "1" and user_in != "2":
+                print("Invalid input")
+                start()
+            if user_in == "1":
+                address = input("Enter Mac address: \n")
+                print("spoofing:")
+                return os.system("sudo spoof set " + address + "en0 ")
+                print("done")
+                os.system("sudo spoof list --wifi")
+            else:
+                url = input("Enter ip: ")
+                os.system("sudo nmap -sS " + url)
+                print("copy desired Mac address")
+                address = input("Enter Mac address: \n")
+                print("spoofing:")
+                os.system("sudo spoof set " + address + "en0")
+                os.system("sudo spoof list --wifi")
         else:
-            url = input("Enter URL: ")
-            os.system("sudo nmap -sS " + url)
-            print("copy desired Mac Adress")
-            adress = input("Enter Mac Adress: \n")
-            os.system("spoof set " + adress + "en0")
-            os.system("spoof list --wifi")
+            os.system("chmod +x mac-spoof.sh")
+            os.system("./mac-spoof.sh")
 
 
 def cell_hack(url):
     # call the function check_network and return 0 if the execution takes more than 1 second
     data = scrape_hosts(url)
     links = parse_string(data[1], r'(http|https):\/\/[^\s]*')
-    hosts = data[0]
+    hosts = list(data[0])
     hosts = hosts + additional_hosts
     for link in links:
         for host in hosts:
