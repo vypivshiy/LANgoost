@@ -31,7 +31,8 @@ def start():
             if user_in == "1":
                 address = input("Enter Mac address: \n")
                 print("spoofing:")
-                return os.system("sudo spoof set " + address + "en0 ")
+                subprocess.run("sudo spoof set " + address +
+                               " en0", shell=True,  stdout=subprocess.PIPE)
                 print("done")
                 os.system("sudo spoof list --wifi")
             else:
@@ -43,8 +44,8 @@ def start():
                 os.system("sudo spoof set " + address + "en0")
                 os.system("sudo spoof list --wifi")
         else:
-            os.system("chmod +x mac-spoof.sh")
-            os.system("./mac_spoof.sh")
+            os.system("chmod +x mac_spoof.sh")
+            os.system("sudo ./mac_spoof.sh")
 
 
 def cell_hack(url):
