@@ -4,23 +4,39 @@ from mitmproxy import http
 from get_hosts import scrape_hosts
 import subprocess
 
+additional_hosts = ["Origin"]
+
 
 def start():
     # ask user for input
     user_in = input(
-        "Select strategy:  \n 1. Host-spoofing \n 2. Mac-spoofing \n")
+        "Select strategy:  \n 1) Cell Hack \n 2) Mac-spoofing \n")
     if user_in != "1" and user_in != "2":
         print("Invalid input")
         start()
     if user_in == "1":
-        url = input("Enter URL: ")
+        url = input("########################\nEnter URL: ")
         if cell_hack(url) == False:
             print("Method unsuccessful")
             user_in = input("Try  Mac-spoofing (y/n)\n")
     else:
-        print("Mac spoofing")
-        # call bash script mac_spoof.sh
-        # os.system("./mac_spoof.sh")
+        print("########################\nMac spoofing")
+        user_in = input(
+            "select method:  \n 1. Spoof Mac Adress \n 2. Scan for mac adresses in your network \n")
+        if user_in != "1" and user_in != "2":
+            print("Invalid input")
+            start()
+        if user_in == "1":
+            adress = input("Enter Mac Adress: \n")
+            os.system("spoof set " + adress + "en0 >/dev/null 2>&1")
+            os.system("spoof list --wifi")
+        else:
+            url = input("Enter URL: ")
+            os.system("sudo nmap -sS " + url)
+            print("copy desired Mac Adress")
+            adress = input("Enter Mac Adress: \n")
+            os.system("spoof set " + adress + "en0")
+            os.system("spoof list --wifi")
 
 
 def cell_hack(url):
@@ -28,6 +44,7 @@ def cell_hack(url):
     data = scrape_hosts(url)
     links = parse_string(data[1], r'(http|https):\/\/[^\s]*')
     hosts = data[0]
+    hosts = hosts + additional_hosts
     for link in links:
         for host in hosts:
             print(host)
