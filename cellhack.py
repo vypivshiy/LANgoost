@@ -5,6 +5,24 @@ from get_hosts import scrape_hosts
 import subprocess
 
 
+def start():
+    # ask user for input
+    user_in = input(
+        "Select strategy:  \n 1. Host-spoofing \n 2. Mac-spoofing \n")
+    if user_in != "1" and user_in != "2":
+        print("Invalid input")
+        start()
+    if user_in == "1":
+        url = input("Enter URL: ")
+        if cell_hack(url) == False:
+            print("Method unsuccessful")
+            input = input("Try  Mac-spoofing (y/n)\n")
+    else:
+        print("Mac spoofing")
+        # call bash script mac_spoof.sh
+        os.system("./mac_spoof.sh")
+
+
 def cell_hack(url):
     # call the function check_network and return 0 if the execution takes more than 1 second
     data = scrape_hosts(url)
@@ -16,6 +34,7 @@ def cell_hack(url):
             send_request(link, host)
             if check_network() == 0:
                 return print("Connection successful")
+    return False
 
 
 def check_network():
@@ -43,4 +62,4 @@ def parse_string(str, regex):
     return data
 
 
-cell_hack("http://5.180.136.162:8000")
+start()
