@@ -66,19 +66,11 @@ class LinuxSpooferIP(OsSpoofer):
                                          universal_newlines=True)
         if mac := self.RE_INTERFACE_MAC.search(result):
             return mac.groupdict().get("mac")
-        raise RuntimeError("Error parse mac address")
+        raise RuntimeError(f"Error parse mac address from {device}")
 
     def find_interfaces(self,
                         *,
-                        show_loopback: bool = False) -> Generator[Dict[
-                                                                  Literal['num']: str,
-                                                                  Literal['interface_name']: str,
-                                                                  Literal['type']: str,
-                                                                  Literal['mac']: str,
-                                                                  Literal['inet']: str,
-                                                                  Literal['valid_lft']: str,
-                                                                  Literal['inet6']: str
-                                                                  ], None, None]:
+                        show_loopback: bool = False) -> Generator[dict, None, None]:
         """Returns the generator of interfaces found on this machine as reported by the `ip` command.
 
         :param show_loopback: return loopback interface. Default False
@@ -110,78 +102,46 @@ class LinuxSpooferIP(OsSpoofer):
 
 
 class LinuxSpoofer(OsSpoofer):
-    """
-    Linux platform specfic implementation for MAC spoofing.
-    """
+    """Linux platform specfic implementation for MAC spoofing."""
+    # parse from command $ifconfig
+    RE_INTERFACES = re.compile(r"""(?P<interface>^\w+): .*
+\s*inet (?P<inet>[\d.]+)\s*netmask (?P<netmask>[\d.]+)\s*broadcast (?P<broadcast>[\d.]+)
+\s*inet6 (?P<inet6>[a-fA-f\d:]+).*
+\s*inet6 (?P<inet6_2>[a-fA-f\d:]+).*
+\s*ether (?P<mac>[a-fA-f\d:]+).*""")
 
-    def get_interface_mac(self, device):
+    def get_interface_mac(self, device: str) -> dict:
         result = subprocess.check_output(["ifconfig", device], stderr=subprocess.STDOUT, universal_newlines=True)
-        m = re.search("(?<=HWaddr\\s)(.*)", result)
-        if not hasattr(m, "group") or m.group(0) == None:
-            return None
-        return m.group(0).strip()
+        if result := self.RE_INTERFACES.search(result):
+            return result.groupdict()
+        raise RuntimeError(f"Error parse mac address from {device}")
 
-    def find_interfaces(self, targets=None):
+    def find_interfaces(self, **kwargs) -> Generator[dict, None, None]:
         """
         Returns the list of interfaces found on this machine as reported
         by the `ifconfig` command.
         """
-        targets = [t.lower() for t in targets] if targets else []
-        # Parse the output of `ifconfig` which gives
-        # us 3 fields used:
-        # - the adapter description
-        # - the adapter name/device associated with this, if any,
-        # - the MAC address, if any
 
         output = subprocess.check_output(["ifconfig"], stderr=subprocess.STDOUT, universal_newlines=True)
 
-        # search for specific adapter gobble through mac address
-        details = re.findall("(.*?)HWaddr(.*)", output, re.MULTILINE)
+        for result in self.RE_INTERFACES.finditer(output):
+            yield result.groupdict()
 
-        # extract out ifconfig results from STDOUT
-        for i in range(0, len(details)):
-            description = None
-            address = None
-            adapter_name = None
-
-            s = details[i][0].split(":")
-            if len(s) >= 2:
-                adapter_name = s[0].split()[0]
-                description = s[1].strip()
-
-            address = details[i][1].strip()
-
-            current_address = self.get_interface_mac(adapter_name)
-
-            if not targets:
-                # Not trying to match anything in particular,
-                # return everything.
-                yield description, adapter_name, address, current_address
-                continue
-
-            for target in targets:
-                if target in (adapter_name.lower(), adapter_name.lower()):
-                    yield description, adapter_name, address, current_address
-                    break
-
-    def find_interface(self, target):
+    def find_interface(self, target) -> NotImplemented:
         """
         Returns tuple of the first interface which matches `target`.
             adapter description, adapter name, mac address of target, current mac addr
         """
-        with contextlib.suppress(StopIteration):
-            return next(self.find_interfaces(targets=[target]))
+        raise NotImplementedError
 
-    def set_interface_mac(self, device, mac, port=None):
+    def set_interface_mac(self, device: str, mac: str, port=None):
         """
         Set the device's mac address.  Handles shutting down and starting back up interface.
         """
         # turn off device & set mac
-        cmd = f"ifconfig {device} down hw ether {mac}"
-        subprocess.call(cmd.split())
+        subprocess.call(f"ifconfig {device} down hw ether {mac}")
         # turn on device
-        cmd = f"ifconfig {device} up"
-        subprocess.call(cmd.split())
+        subprocess.call(f"ifconfig {device} up")
 
 
 class MacSpoofer(OsSpoofer):
