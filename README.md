@@ -1,54 +1,47 @@
-# Methods
-Possible methods to get the internet in restricted network
+# LANGoost
+[Base bypass methods instructions](README_bypass_methods.md)
+# Module docs
+[scrapper.py](scrapper.py)
 
+Simple one-threaded, recursion spider for parse urls. Can parametrize scan depth and other settings.
 
-## Cellhack 
-Brute `Host:` http header.  
-You can use this url for this `http://151.236.217.13/ok`  
-This url always returns `200` so we can use it to check redirects.  
+Return sorted list urls or hosts 
 
-It returns `You find the hole` plaintext response.  
+```python
+from scrapper import LinkSpider
 
-```
-$ curl -H "Host: blabla.com" http://151.236.217.13/ok
-You find the hole
-```
-
-### Bypass the http cache
-Some ISP's may cache http traffic.  
-To check this we can add random data to request and server will retutrn it in response  
-```
-$ curl -H "Host: blabla.com" http://151.236.217.13/ok?cachedornot123
-You find the hole
-cachedornot123
-
-```
-
-### Check for scripts injection
-Some IPS's may inject javascript in http page. 
-We can check this by calculating checksum of response
-
-```
-$ curl -H "Host: blabla.com" http://151.236.217.13/ok?someshit | md5sum
-e355a7c941287bf3d924cff1ab8fab13
+spider = LinkSpider("https://requests.readthedocs.io/",
+                    max_depth=1,
+                    )
+urls = spider.start()
+print(len(urls))
+print(*urls, sep="\n")
+# 147
+# https://api.github.com/user&#39;
+# https://docutils.sourceforge.net/
+# https://ghbtns.com/github-btn.html?user=psf&repo=requests&type=watch&count=true&size=large
+# https://gist.github.com/973705
+# https://github.com/psf/requests
+# ...
 ```
 
-## Find gateway in LAN and other networks
-Some hosts in LAN may allow forwarding.  Lets scan it to find hidden gateways  
-IPS may allow forwarding to some local networks, so additional networks may be possible to add via option  
-https://github.com/pentestmonkey/gateway-finder
+[mac_spoof.py](mac_spoof.py)
 
-## Find proxies
-Scan LAN for 8080, 80, 1080, 3128 and so on for proxies
+*unix and macOS modules for obtaining MAC addresses of devices based on calling commands to the terminal 
+and replacing the mac address with the specified one. Requires **root** privileges
 
-## 53 port and other
-Some IPS's block's only 80 and 443 ports.
-Lets try to connect from/to 53 TCP/UDP port and other ports/protocols. 
+```python
+from mac_spoof import LinuxSpooferIP
+for interface in LinuxSpooferIP().find_interfaces():
+    print(interface)
+# {'num': '1', 'interface_name': 'lo', 'type': 'loopback', 'mac': '00:00:00:00:00:00', 'inet': '127.0.0.1/8', 'valid_lft': 'forever', 'inet6': '::1/128'}
+# {'num': '2', 'interface_name': 'wlp2s0', 'type': 'ether', 'mac': '00:ab:ba:f0:00:12', 'inet': '192.168.0.105/24', 'valid_lft': '3852sec', 'inet6': '2a02:2168:ad4a:cb00:232f:87f9:9817:b7a6/64'}
+```
 
-## Firewall misconfiguration
-How to expoit?
-ToS flags? Fragmentation? 
+[mac_spoof.sh](mac_spoof.sh)
 
-## ICMP and DNS tunnels
-When nothing else works
+hackaptive.sh from kali linux 
 
+[cellhack.py](cellhack.py)
+
+PoC implementation of mac spoof, cellhack methods
