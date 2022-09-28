@@ -6,12 +6,6 @@ import subprocess
 import sys
 import os.path
 
-__all__ = (
-    'find_interfaces',
-    'find_interface',
-    'set_interface_mac',
-    'wireless_port_names'
-)
 
 from typing import Optional, List, Literal, Generator, Dict
 
@@ -51,7 +45,7 @@ class LinuxSpooferIP(OsSpoofer):
     # parse mac interface from command $ip link show <device>
     RE_INTERFACE_MAC = re.compile(r"(?<=\w\s)(?P<mac>[a-fA-f\d:]+)(?=\sbrd)")
     # parse detail info from command $ip address
-    RE_INTERFACES = re.compile(r"""(?P<num>^\d+): (?P<interface_name>\w+): .*
+    RE_INTERFACES = re.compile(r"""(?P<num>\d+): (?P<interface_name>\w+): .*
 \s*link/(?P<type>\w+) (?P<mac>[a-fA-f\d:]+)(?=\sbrd).*
 \s*inet (?P<inet>[\d/.]+) .*
 \s*valid_lft (?P<valid_lft>\w+) .*
@@ -69,8 +63,8 @@ class LinuxSpooferIP(OsSpoofer):
         raise RuntimeError(f"Error parse mac address from {device}")
 
     def find_interfaces(self,
-                        *,
-                        show_loopback: bool = False) -> Generator[dict, None, None]:
+                        show_loopback: bool = True,
+                        **kwargs) -> Generator[dict, None, None]:
         """Returns the generator of interfaces found on this machine as reported by the `ip` command.
 
         :param show_loopback: return loopback interface. Default False
@@ -276,7 +270,7 @@ def get_os_spoofer():
     return spoofer
 
 
-def find_interfaces(targets=None):
+def find_interfaces():
     """
     Returns the list of interfaces found on this machine reported by the OS.
     Target varies by platform:
@@ -285,10 +279,10 @@ def find_interfaces(targets=None):
     """
     # Wrapper to interface handles encapsulating objects
     spoofer = get_os_spoofer()
-    return spoofer.find_interfaces(targets)
+    return spoofer.find_interfaces()
 
 
-def find_interface(targets=None):
+def find_interface():
     """
     Returns tuple of the first interface which matches `target`.
         adapter description, adapter name, mac address of target, current mac addr
@@ -297,8 +291,7 @@ def find_interface(targets=None):
         Windows this is the network adapter name in ipconfig
     """
     # Wrapper to interface handles encapsulating objects
-    spoofer = get_os_spoofer()
-    return spoofer.find_interface(targets)
+    return
 
 
 def set_interface_mac(device, mac, port=None):
@@ -314,5 +307,5 @@ def set_interface_mac(device, mac, port=None):
 
 
 if __name__ == '__main__':
-    for interface in find_interfaces():
-        print(interface["mac"])
+    for interface in LinuxSpooferIP().find_interfaces():
+        print(interface)
