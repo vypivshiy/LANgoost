@@ -42,7 +42,8 @@ class LinkSpider:
                  max_depth: int = 3,
                  request_delay: float = 0.3,
                  check_host_netloc: bool = True,
-                 http2: bool = False):
+                 http2: bool = False,
+                 timeout: float = 30):
         """
         :param url_target: start url target
         :param max_depth: max depth scrapping. default 3
@@ -52,12 +53,10 @@ class LinkSpider:
         self.request_delay = request_delay
         self._protocol = protocol
         self._session = Client(http2=True) if http2 else Client()
-        self._session.timeout = 30.0
+        self._session.timeout = timeout
         self._session.headers.update(
             {
                 "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.126 Safari/537.36"})
-        self._session.event_hooks.update(
-            {"response": [lambda resp: sleep(self.request_delay)]})
         self._session.follow_redirects = allow_redirects
 
         self.base_url = url_target
@@ -86,6 +85,7 @@ class LinkSpider:
         for i in range(try_connects):
             try:
                 resp = self._session.get(url)
+                sleep(self.request_delay)
             except httpx.UnsupportedProtocol:
                 logging.error(f"Bad url {url}")
                 return
@@ -147,8 +147,8 @@ class LinkSpider:
 if __name__ == '__main__':
     p = LinkSpider("https://megafon.ru",
                    allow_redirects=True,
-                   request_delay=0.3,
-                   max_depth=1,
+                   request_delay=0.5,
+                   max_depth=2,
                    protocol="https",
                    http2=False)
 
